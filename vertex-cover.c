@@ -6,7 +6,7 @@
 
 bool isVertexCover(int graph[MAX_VERTICES][MAX_VERTICES], int n, int cover[], int k) {
     bool edges_covered[MAX_VERTICES][MAX_VERTICES] = {false};
-
+    
     for (int i = 0; i < k; i++) {
         int v = cover[i];
         for (int j = 0; j < n; j++) {
@@ -30,11 +30,22 @@ void generateCombinations(int n, int k, int cover[], int start, int currentSize,
                           int graph[MAX_VERTICES][MAX_VERTICES], int* minCover, int* minSize) {
     if (currentSize == k) {
         if (isVertexCover(graph, n, cover, k)) {
+            // we found a solution check if it is better then the minSize
             if (k < *minSize) {
+                // if so update minSize and minCover
                 *minSize = k;
-                for (int i = 0; i < k; i++) {
+                // use loop unrolling
+                int i;
+                for (i = 0; i < k - 3; i+=4) {
+                    minCover[i] = cover[i];
+                    minCover[i+1] = cover[i+1];
+                    minCover[i+2] = cover[i+2];
+                    minCover[i+3] = cover[i+3];
+                }
+                for (; i < k; i++) {
                     minCover[i] = cover[i];
                 }
+
             }
         }
         return;
@@ -51,8 +62,16 @@ void findMinVertexCover(int graph[MAX_VERTICES][MAX_VERTICES], int n) {
     int* minCover = (int*)malloc(n * sizeof(int));
     int* cover = (int*)malloc(n * sizeof(int));
     int minSize = n + 1;
+    int i = 1;
+    // find the first power of 2 that we get a valid answer
 
-    for (int k = 1; k <= n && minSize > k; k++) {
+    for (int k = 1; k <= n && minSize > k; k*=2, i*=2) {
+        generateCombinations(n, k, cover, 0, 0, graph, minCover, &minSize);
+
+    }
+    i /=4;
+    // check all the number between 2^(i-1) and 2^i
+    for (int k = i +1; k <= i * 2 && minSize > k; k++) {
         generateCombinations(n, k, cover, 0, 0, graph, minCover, &minSize);
     }
 
