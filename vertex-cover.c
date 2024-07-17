@@ -8,7 +8,8 @@ bool isVertexCover(int graph[MAX_VERTICES][MAX_VERTICES], int n, int cover[], in
     bool edges_covered[MAX_VERTICES][MAX_VERTICES] = {false};
     
     for (int i = 0; i < k; i++) {
-        int v = cover[i];
+        // convert indexing to use pointers
+        int v = *cover++;
         for (int j = 0; j < n; j++) {
             if (graph[v][j]) {
                 edges_covered[v][j] = edges_covered[j][v] = true;
@@ -36,14 +37,15 @@ void generateCombinations(int n, int k, int cover[], int start, int currentSize,
                 *minSize = k;
                 // use loop unrolling
                 int i;
+                // convert indexing to use pointers
                 for (i = 0; i < k - 3; i+=4) {
-                    minCover[i] = cover[i];
-                    minCover[i+1] = cover[i+1];
-                    minCover[i+2] = cover[i+2];
-                    minCover[i+3] = cover[i+3];
+                    *minCover++ = *cover++;
+                    *minCover++ = *cover++;
+                    *minCover++ = *cover++;
+                    *minCover++ = *cover++;
                 }
                 for (; i < k; i++) {
-                    minCover[i] = cover[i];
+                    *minCover++ = *cover++;
                 }
 
             }
@@ -62,16 +64,16 @@ void findMinVertexCover(int graph[MAX_VERTICES][MAX_VERTICES], int n) {
     int* minCover = (int*)malloc(n * sizeof(int));
     int* cover = (int*)malloc(n * sizeof(int));
     int minSize = n + 1;
-    int i = 1;
+    int lastPowerOf2 = 1;
     // find the first power of 2 that we get a valid answer
 
-    for (int k = 1; k <= n && minSize > k; k*=2, i*=2) {
+    for (int k = 1; k <= n && minSize > k; k*=2) {
         generateCombinations(n, k, cover, 0, 0, graph, minCover, &minSize);
+        lastPowerOf2 = k;
 
     }
-    i /=4;
     // check all the number between 2^(i-1) and 2^i
-    for (int k = i +1; k <= i * 2 && minSize > k; k++) {
+    for (int k = lastPowerOf2; k <= lastPowerOf2 * 2 && minSize > k; k++) {
         generateCombinations(n, k, cover, 0, 0, graph, minCover, &minSize);
     }
 
